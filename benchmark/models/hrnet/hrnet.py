@@ -39,7 +39,12 @@ def hrnet(training: bool, task: str, config: str, microbatch: int, device: str, 
         if compiler_cfg.balancer_policy == "default":
             compiler_cfg.balancer_policy = "Ribbon"
 
-        if data_type == "Bfp8_b" and pybuda.detect_available_devices()[0] == BackendDevice.Wormhole_B0:
+        available_devices = pybuda.detect_available_devices()
+
+        if(len(available_devices) == 0):
+            available_devices = [BackendDevice.Wormhole_B0]
+
+        if data_type == "Bfp8_b" and available_devices[0] == BackendDevice.Wormhole_B0:
             os.environ["PYBUDA_ENABLE_DRAM_IO_BUFFER_SCALING"] = "1"
             os.environ["PYBUDA_ENABLE_INPUT_BUFFER_SCALING_FOR_NOC_READERS"] = "1"
 
@@ -80,7 +85,7 @@ def hrnet(training: bool, task: str, config: str, microbatch: int, device: str, 
         if data_type == "Bfp8_b":
             if "TT_BACKEND_OVERLAY_MAX_EXTRA_BLOB_SIZE" not in os.environ:
                 os.environ["TT_BACKEND_OVERLAY_MAX_EXTRA_BLOB_SIZE"] = f"{10*1024}"
-        available_devices = pybuda.detect_available_devices()
+        # available_devices = pybuda.detect_available_devices()
         if available_devices:
             if available_devices[0] == BackendDevice.Grayskull:
                 pybuda.config._internal_insert_fj_buffering_nop("add_312", ["add_341"], nop_count=2)

@@ -30,7 +30,13 @@ def t5(training: bool, task: str, config: str, microbatch: int, device: str, dat
         compiler_cfg.enable_tvm_cpu_fallback = False
         compiler_cfg.default_df_override = pybuda._C.Float16_b
         compiler_cfg.default_dram_parameters = False
-        if pybuda.detect_available_devices()[0] == BackendDevice.Grayskull:
+
+        available_devices = pybuda.detect_available_devices()
+
+        if(len(available_devices) == 0):
+            available_devices = [BackendDevice.Wormhole_B0]
+
+        if available_devices[0] == BackendDevice.Grayskull:
             compiler_cfg.enable_auto_fusing = False
         compiler_cfg.enable_amp_light()
 

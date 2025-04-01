@@ -29,7 +29,13 @@ def bert(training: bool, task: str, config: str, microbatch: int, device: str, d
                 pybuda.config.configure_mixed_precision(op_type="add", output_df=pybuda.DataFormat.Float16_b)
                 pybuda.config.configure_mixed_precision(op_type="subtract", output_df=pybuda.DataFormat.Float16_b)
                 pybuda.config.configure_mixed_precision(op_type="reciprocal", output_df=pybuda.DataFormat.Float16_b)
-                if pybuda.detect_available_devices()[0] == BackendDevice.Wormhole_B0:
+
+                available_devices = pybuda.detect_available_devices()
+
+                if(len(available_devices) == 0):
+                    available_devices = [BackendDevice.Wormhole_B0]
+                    
+                if available_devices[0] == BackendDevice.Wormhole_B0:
                     os.environ["PYBUDA_ENABLE_INPUT_BUFFER_SCALING_FOR_NOC_READERS"] = "1"
 
     # Set model parameters based on chosen task and model configuration

@@ -22,10 +22,14 @@ def vovnet_v2(training: bool, task: str, config: str, microbatch: int, device: s
 
         compiler_cfg = pybuda.config._get_global_compiler_config()
         available_devices = pybuda.detect_available_devices()
+
+        if(len(available_devices) == 0):
+            available_devices = [BackendDevice.Wormhole_B0]
+
         if available_devices[0] != BackendDevice.Grayskull:
             compiler_cfg.enable_auto_transposing_placement = True
 
-        if data_type == "Bfp8_b" and pybuda.detect_available_devices()[0] == BackendDevice.Wormhole_B0:
+        if data_type == "Bfp8_b" and available_devices[0] == BackendDevice.Wormhole_B0:
             os.environ["PYBUDA_ENABLE_DRAM_IO_BUFFER_SCALING"] = "1"
             os.environ["PYBUDA_ENABLE_INPUT_BUFFER_SCALING_FOR_NOC_READERS"] = "1"
 

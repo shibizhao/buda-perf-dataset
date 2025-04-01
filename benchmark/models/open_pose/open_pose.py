@@ -27,17 +27,22 @@ def open_pose(training: bool, task: str, config: str, microbatch: int, device: s
         if compiler_cfg.balancer_policy == "default":
             compiler_cfg.balancer_policy = "Ribbon"
 
-        if pybuda.detect_available_devices()[0] == BackendDevice.Grayskull:
+        available_devices = pybuda.detect_available_devices()
+
+        if(len(available_devices) == 0):
+            available_devices = [BackendDevice.Wormhole_B0]
+
+        if available_devices[0] == BackendDevice.Grayskull:
             compiler_cfg.enable_auto_fusing = False
 
-        if data_type == "Fp16" and pybuda.detect_available_devices()[0] == BackendDevice.Wormhole_B0:
+        if data_type == "Fp16" and available_devices[0] == BackendDevice.Wormhole_B0:
             os.environ["PYBUDA_ENABLE_DRAM_IO_BUFFER_SCALING"] = "1"
             os.environ["PYBUDA_ENABLE_INPUT_BUFFER_SCALING_FOR_NOC_READERS"] = "1"
 
         os.environ["PYBUDA_SUPRESS_T_FACTOR_MM"] = "13"
         os.environ["PYBUDA_ENABLE_HOST_INPUT_NOP_BUFFERING"] = "1"
 
-        if config == "2d" and pybuda.detect_available_devices()[0] == BackendDevice.Wormhole_B0 and data_type == "Fp16":
+        if config == "2d" and available_devices[0] == BackendDevice.Wormhole_B0 and data_type == "Fp16":
             os.environ["PYBUDA_DISABLE_ELU_HANDLE_INF"] = "1"
 
         # Set model parameters based on chosen task and model configuration

@@ -11,7 +11,7 @@ from transformers import AutoFeatureExtractor, ResNetForImageClassification
 from ...common import DummyCVDataset, ImageNetDataset, benchmark_model, torch_df_from_str
 
 
-@benchmark_model(configs=["resnet18", "resnet50"])
+@benchmark_model(configs=["resnet18", "resnet50", "resnet101"])
 def resnet(training: bool, task: str, config: str, microbatch: int, device: str, data_type: str):
 
     if device == "tt":
@@ -27,7 +27,12 @@ def resnet(training: bool, task: str, config: str, microbatch: int, device: str,
         os.environ["PYBUDA_ENABLE_HOST_INPUT_NOP_BUFFERING"] = "1"
         os.environ["PYBUDA_ALLOW_MULTICOLUMN_SPARSE_MATMUL"] = "1"
 
-        if data_type == "Bfp8_b" and pybuda.detect_available_devices()[0] == BackendDevice.Wormhole_B0:
+        available_devices = pybuda.detect_available_devices()
+
+        if(len(available_devices) == 0):
+            available_devices = [BackendDevice.Wormhole_B0]
+
+        if data_type == "Bfp8_b" and available_devices[0] == BackendDevice.Wormhole_B0:
             os.environ["PYBUDA_ENABLE_DRAM_IO_BUFFER_SCALING"] = "1"
             os.environ["PYBUDA_ENABLE_INPUT_BUFFER_SCALING_FOR_NOC_READERS"] = "1"
             # Enable Data Movement Estimates
@@ -50,6 +55,9 @@ def resnet(training: bool, task: str, config: str, microbatch: int, device: str,
         target_microbatch = 64
     elif config == "resnet50":
         model_name = "microsoft/resnet-50"
+        target_microbatch = 64
+    elif config == "resnet101":
+        model_name = "microsoft/resnet-101"
         target_microbatch = 64
     else:
         raise RuntimeError("Unknown config")
